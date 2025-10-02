@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Timer Tracker - متتبع وقت البرمجة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- الرأس -->
+        <header>
+            <div class="header-main">
+                <h1><i class="fas fa-code"></i> Code Timer Tracker</h1>
+                <div class="header-controls">
+                    <button id="themeToggle" class="btn-icon">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="syncBtn" class="btn-secondary">
+                        <i class="fas fa-sync"></i> مزامنة
+                    </button>
+                    <button id="exportBtn" class="btn-secondary">
+                        <i class="fas fa-download"></i> تصدير
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- التنقل -->
+        <nav class="main-nav">
+            <button class="nav-btn active" data-page="dashboard">
+                <i class="fas fa-chart-line"></i>
+                <span>لوحة التحكم</span>
+            </button>
+            <button class="nav-btn" data-page="timer">
+                <i class="fas fa-play"></i>
+                <span>المؤقت النشط</span>
+            </button>
+            <button class="nav-btn" data-page="projects">
+                <i class="fas fa-folder"></i>
+                <span>المشاريع</span>
+            </button>
+            <button class="nav-btn" data-page="sessions">
+                <i class="fas fa-history"></i>
+                <span>سجل الجلسات</span>
+            </button>
+            <button class="nav-btn" data-page="reports">
+                <i class="fas fa-chart-bar"></i>
+                <span>التقارير</span>
+            </button>
+        </nav>
+
+        <!-- الصفحات -->
+        <main class="main-content">
+            <!-- صفحة لوحة التحكم -->
+            <section id="dashboard" class="page active">
+                <div class="dashboard-grid">
+                    <!-- بطاقات الإحصائيات -->
+                    <div class="stats-grid">
+                        <div class="stat-card primary">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="todayTime">0h 0m</div>
+                                <div class="stat-label">اليوم</div>
+                            </div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar-week"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="weekTime">0h 0m</div>
+                                <div class="stat-label">هذا الأسبوع</div>
+                            </div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="billableAmount">0</div>
+                                <div class="stat-label">قابل للفوترة</div>
+                            </div>
+                        </div>
+                        <div class="stat-card info">
+                            <div class="stat-icon">
+                                <i class="fas fa-project-diagram"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" id="activeProjects">0</div>
+                                <div class="stat-label">مشاريع نشطة</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- المؤقت السريع -->
+                    <div class="quick-timer-card">
+                        <h3>بدء جلسة سريعة</h3>
+                        <div class="quick-actions">
+                            <button class="template-btn" data-duration="25">
+                                <i class="fas fa-bug"></i>
+                                <span>إصلاح أخطاء (25د)</span>
+                            </button>
+                            <button class="template-btn" data-duration="45">
+                                <i class="fas fa-code"></i>
+                                <span>ميزة جديدة (45د)</span>
+                            </button>
+                            <button class="template-btn" data-duration="60">
+                                <i class="fas fa-search"></i>
+                                <span>بحث (60د)</span>
+                            </button>
+                            <button class="template-btn" data-duration="30">
+                                <i class="fas fa-eye"></i>
+                                <span>مراجعة كود (30د)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- الرسوم البيانية -->
+                    <div class="chart-card">
+                        <h3>الوقت حسب المشاريع</h3>
+                        <div class="chart-container">
+                            <canvas id="projectsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- الجلسات الأخيرة -->
+                    <div class="recent-sessions">
+                        <h3>آخر الجلسات</h3>
+                        <div class="sessions-list" id="recentSessionsList">
+                            <!-- الجلسات ستظهر هنا -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- صفحة المؤقت النشط -->
+            <section id="timer" class="page">
+                <div class="timer-container">
+                    <div class="current-session" id="currentSession">
+                        <div class="session-header">
+                            <h3>لا توجد جلسة نشطة</h3>
+                            <div class="session-tags">
+                                <span class="tag billable">قابل للفوترة</span>
+                                <span class="tag pomodoro">بومودورو</span>
+                            </div>
+                        </div>
+
+                        <div class="timer-display">
+                            <div class="time" id="currentTimer">00:00:00</div>
+                            <div class="session-info">
+                                <span id="sessionProject">لم يتم تعيين مشروع</span>
+                                <span id="sessionTask">لا توجد مهمة</span>
+                            </div>
+                        </div>
+
+                        <div class="timer-controls">
+                            <button id="startTimer" class="btn-primary btn-large">
+                                <i class="fas fa-play"></i> بدء
+                            </button>
+                            <button id="pauseTimer" class="btn-secondary btn-large" disabled>
+                                <i class="fas fa-pause"></i> إيقاف مؤقت
+                            </button>
+                            <button id="stopTimer" class="btn-danger btn-large" disabled>
+                                <i class="fas fa-stop"></i> إنهاء
+                            </button>
+                        </div>
+
+                        <!-- إعدادات الجلسة -->
+                        <div class="session-settings">
+                            <div class="setting-group">
+                                <label for="sessionProjectSelect">المشروع</label>
+                                <select id="sessionProjectSelect">
+                                    <option value="">اختر مشروع...</option>
+                                </select>
+                            </div>
+                            <div class="setting-group">
+                                <label for="sessionTaskSelect">المهمة</label>
+                                <select id="sessionTaskSelect">
+                                    <option value="">اختر مهمة...</option>
+                                </select>
+                            </div>
+                            <div class="setting-group">
+                                <label for="sessionTags">الوسوم</label>
+                                <input type="text" id="sessionTags" placeholder="مثال: bugfix, feature">
+                            </div>
+                            <div class="setting-group">
+                                <label>
+                                    <input type="checkbox" id="sessionBillable">
+                                    قابل للفوترة
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- ملاحظات الجلسة -->
+                        <div class="session-notes">
+                            <label for="sessionNotes">ملاحظات الجلسة</label>
+                            <textarea id="sessionNotes" placeholder="ما الذي تعمل عليه؟ أي تحديات واجهتك؟"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- مؤقت البومودورو -->
+                    <div class="pomodoro-timer">
+                        <h4>مؤقت البومودورو</h4>
+                        <div class="pomodoro-display">
+                            <div class="pomodoro-time" id="pomodoroTimer">25:00</div>
+                            <div class="pomodoro-phase" id="pomodoroPhase">وقت العمل</div>
+                        </div>
+                        <div class="pomodoro-controls">
+                            <button id="startPomodoro" class="btn-primary">
+                                <i class="fas fa-play"></i> بدء
+                            </button>
+                            <button id="resetPomodoro" class="btn-secondary">
+                                <i class="fas fa-redo"></i> إعادة تعيين
+                            </button>
+                        </div>
+                        <div class="pomodoro-settings">
+                            <div class="setting-group">
+                                <label>وقت العمل (دقائق)</label>
+                                <input type="number" id="workDuration" value="25" min="5" max="60">
+                            </div>
+                            <div class="setting-group">
+                                <label>وقت الراحة (دقائق)</label>
+                                <input type="number" id="breakDuration" value="5" min="1" max="30">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- صفحة المشاريع -->
+            <section id="projects" class="page">
+                <div class="page-header">
+                    <h2>إدارة المشاريع</h2>
+                    <button id="addProjectBtn" class="btn-primary">
+                        <i class="fas fa-plus"></i> مشروع جديد
+                    </button>
+                </div>
+
+                <div class="projects-grid" id="projectsList">
+                    <!-- المشاريع ستظهر هنا -->
+                </div>
+            </section>
+
+            <!-- صفحة سجل الجلسات -->
+            <section id="sessions" class="page">
+                <div class="page-header">
+                    <h2>سجل الجلسات</h2>
+                    <div class="filters">
+                        <select id="sessionProjectFilter">
+                            <option value="all">جميع المشاريع</option>
+                        </select>
+                        <select id="sessionDateFilter">
+                            <option value="today">اليوم</option>
+                            <option value="week">هذا الأسبوع</option>
+                            <option value="month">هذا الشهر</option>
+                            <option value="all">كل الوقت</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="sessions-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>المشروع</th>
+                                <th>المهمة</th>
+                                <th>المدة</th>
+                                <th>التاريخ</th>
+                                <th>الوسوم</th>
+                                <th>قابل للفوترة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sessionsTableBody">
+                            <!-- صفوف الجلسات ستظهر هنا -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- صفحة التقارير -->
+            <section id="reports" class="page">
+                <div class="page-header">
+                    <h2>التقارير والتحليلات</h2>
+                    <div class="report-controls">
+                        <select id="reportPeriod">
+                            <option value="week">أسبوع</option>
+                            <option value="month">شهر</option>
+                            <option value="quarter">ربع سنة</option>
+                            <option value="year">سنة</option>
+                        </select>
+                        <button id="generateReport" class="btn-primary">
+                            <i class="fas fa-file-pdf"></i> تصدير PDF
+                        </button>
+                    </div>
+                </div>
+
+                <div class="reports-grid">
+                    <div class="report-card">
+                        <h3>الإنتاجية الأسبوعية</h3>
+                        <div class="chart-container">
+                            <canvas id="weeklyChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="report-card">
+                        <h3>توزيع الوقت</h3>
+                        <div class="chart-container">
+                            <canvas id="distributionChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="report-card">
+                        <h3>مقارنة المشاريع</h3>
+                        <div class="chart-container">
+                            <canvas id="comparisonChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="report-card">
+                        <h3>الاتجاه الزمني</h3>
+                        <div class="chart-container">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- النماذج المنبثقة -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="projectModalTitle">مشروع جديد</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <form id="projectForm" class="modal-form">
+                <div class="form-group">
+                    <label for="projectName">اسم المشروع</label>
+                    <input type="text" id="projectName" required>
+                </div>
+                <div class="form-group">
+                    <label for="projectDescription">الوصف</label>
+                    <textarea id="projectDescription" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="projectRate">السعر بالساعة ($)</label>
+                    <input type="number" id="projectRate" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="projectColor">لون المشروع</label>
+                    <input type="color" id="projectColor" value="#3498db">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">حفظ المشروع</button>
+                    <button type="button" class="btn-secondary cancel-btn">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ملفات الصوت -->
+    <audio id="sessionStartSound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="sessionEndSound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-completion-of-a-level-2063.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="pomodoroEndSound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
