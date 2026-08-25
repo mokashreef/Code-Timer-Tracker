@@ -1,5 +1,3 @@
-/* المتغيرات العامة */
-
 :root {
     --primary-color: #3498db;
     --primary-dark: #2980b9;
@@ -42,8 +40,6 @@
 }
 
 
-/* إعدادات عامة */
-
 * {
     margin: 0;
     padding: 0;
@@ -65,8 +61,6 @@ body {
     min-height: 100vh;
 }
 
-
-/* الرأس */
 
 .header-main {
     display: flex;
@@ -93,8 +87,6 @@ header h1 i {
     align-items: center;
 }
 
-
-/* التنقل */
 
 .main-nav {
     display: flex;
@@ -134,8 +126,6 @@ header h1 i {
 }
 
 
-/* المحتوى الرئيسي */
-
 .main-content {
     min-height: 60vh;
 }
@@ -160,8 +150,6 @@ header h1 i {
     }
 }
 
-
-/* لوحة التحكم */
 
 .dashboard-grid {
     display: grid;
@@ -190,8 +178,6 @@ header h1 i {
     grid-area: recent;
 }
 
-
-/* بطاقات الإحصائيات */
 
 .stat-card {
     background: var(--card-bg);
@@ -267,9 +253,6 @@ header h1 i {
     color: var(--text-light);
 }
 
-
-/* المؤقت السريع */
-
 .quick-timer-card {
     background: var(--card-bg);
     padding: 25px;
@@ -312,9 +295,6 @@ header h1 i {
     font-size: 1.2rem;
     color: var(--primary-color);
 }
-
-
-/* المؤقت النشط */
 
 .timer-container {
     display: grid;
@@ -430,8 +410,6 @@ header h1 i {
 }
 
 
-/* مؤقت البومودورو */
-
 .pomodoro-timer {
     text-align: center;
 }
@@ -470,9 +448,6 @@ header h1 i {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
 }
-
-
-/* المشاريع */
 
 .page-header {
     display: flex;
@@ -555,8 +530,6 @@ header h1 i {
     gap: 10px;
 }
 
-
-/* الجداول */
 
 .sessions-table {
     background: var(--card-bg);
@@ -652,8 +625,6 @@ header h1 i {
     transform: scale(1.05);
 }
 
-
-/* النماذج المنبثقة */
 
 .modal {
     display: none;
@@ -767,8 +738,6 @@ header h1 i {
 }
 
 
-/* الرسوم البيانية */
-
 .chart-card,
 .report-card {
     background: var(--card-bg);
@@ -796,7 +765,6 @@ header h1 i {
 }
 
 
-/* التجاوبية */
 
 @media (max-width: 1024px) {
     .dashboard-grid {
