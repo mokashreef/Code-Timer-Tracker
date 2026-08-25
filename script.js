@@ -1,11 +1,10 @@
-// تطبيق Code Timer Tracker
 class CodeTimerTracker {
     constructor() {
         this.projects = [];
         this.sessions = [];
         this.currentSession = null;
         this.isPomodoroRunning = false;
-        this.pomodoroPhase = 'work'; // work or break
+        this.pomodoroPhase = 'work';
         this.charts = {};
         this.editingProject = null;
         this.pomodoroTimeLeft = 0;
@@ -20,44 +19,30 @@ class CodeTimerTracker {
         this.startIdleDetection();
     }
 
-    // تهيئة عناصر DOM
     initializeElements() {
-        // التنقل
         this.navButtons = document.querySelectorAll('.nav-btn');
         this.pages = document.querySelectorAll('.page');
-
-        // المؤقت النشط
         this.currentTimer = document.getElementById('currentTimer');
         this.startTimerBtn = document.getElementById('startTimer');
         this.pauseTimerBtn = document.getElementById('pauseTimer');
         this.stopTimerBtn = document.getElementById('stopTimer');
-
-        // إعدادات الجلسة
         this.sessionProjectSelect = document.getElementById('sessionProjectSelect');
         this.sessionTaskSelect = document.getElementById('sessionTaskSelect');
         this.sessionTags = document.getElementById('sessionTags');
         this.sessionBillable = document.getElementById('sessionBillable');
         this.sessionNotes = document.getElementById('sessionNotes');
-
-        // البومودورو
         this.pomodoroTimerElement = document.getElementById('pomodoroTimer');
         this.pomodoroPhaseElement = document.getElementById('pomodoroPhase');
         this.startPomodoroBtn = document.getElementById('startPomodoro');
         this.resetPomodoroBtn = document.getElementById('resetPomodoro');
         this.workDuration = document.getElementById('workDuration');
         this.breakDuration = document.getElementById('breakDuration');
-
-        // النماذج
         this.projectModal = document.getElementById('projectModal');
         this.projectForm = document.getElementById('projectForm');
         this.addProjectBtn = document.getElementById('addProjectBtn');
-
-        // الأزرار الأخرى
         this.themeToggle = document.getElementById('themeToggle');
         this.exportBtn = document.getElementById('exportBtn');
         this.syncBtn = document.getElementById('syncBtn');
-
-        // ملفات الصوت
         this.sessionStartSound = document.getElementById('sessionStartSound');
         this.sessionEndSound = document.getElementById('sessionEndSound');
         this.pomodoroEndSound = document.getElementById('pomodoroEndSound');
@@ -67,49 +52,33 @@ class CodeTimerTracker {
     setupEventListeners() {
         var self = this;
 
-        // التنقل
         this.navButtons.forEach(function(btn) {
             btn.addEventListener('click', function() {
                 self.showPage(this.getAttribute('data-page'));
             });
         });
 
-        // تحكم المؤقت
         this.startTimerBtn.addEventListener('click', function() { self.startSession(); });
         this.pauseTimerBtn.addEventListener('click', function() { self.togglePause(); });
         this.stopTimerBtn.addEventListener('click', function() { self.stopSession(); });
-
-        // البومودورو
         this.startPomodoroBtn.addEventListener('click', function() { self.togglePomodoro(); });
         this.resetPomodoroBtn.addEventListener('click', function() { self.resetPomodoroTimer(); });
-
-        // القوالب السريعة
         document.querySelectorAll('.template-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 self.startQuickSession(parseInt(this.getAttribute('data-duration')));
             });
         });
-
-        // المشاريع
         this.addProjectBtn.addEventListener('click', function() { self.showProjectModal(); });
         this.projectForm.addEventListener('submit', function(e) {
             e.preventDefault();
             self.saveProject();
         });
-
-        // إغلاق النماذج
         document.querySelectorAll('.close-btn, .cancel-btn').forEach(function(btn) {
             btn.addEventListener('click', function() { self.hideModals(); });
         });
-
-        // تبديل السمة
         this.themeToggle.addEventListener('click', function() { self.toggleTheme(); });
-
-        // التصدير والمزامنة
         this.exportBtn.addEventListener('click', function() { self.exportData(); });
         this.syncBtn.addEventListener('click', function() { self.syncData(); });
-
-        // تحديث قوائم الاختيار
         this.sessionProjectSelect.addEventListener('change', function() { self.updateTaskSelect(); });
     }
 
@@ -155,22 +124,16 @@ class CodeTimerTracker {
                 self.showIdleAlert();
             }
         }, 60000);
-
-        // إعادة تعيين وقت الخمول عند النشاط
         var resetIdleTime = function() { idleTime = 0; };
         document.addEventListener('mousemove', resetIdleTime);
         document.addEventListener('keypress', resetIdleTime);
         document.addEventListener('click', resetIdleTime);
     }
-
-    // عرض تنبيه الخمول
     showIdleAlert() {
         if (confirm('يبدو أنك غير نشط. هل تريد إيقاف المؤقت الحالي؟')) {
             this.stopSession();
         }
     }
-
-    // إدارة الجلسات
     startSession() {
         if (this.currentSession) return;
 
@@ -200,8 +163,6 @@ class CodeTimerTracker {
         this.updateTimerControls();
         this.playSound(this.sessionStartSound);
         this.updateCurrentSessionDisplay();
-
-        // بدء تحديث المؤقت
         this.updateTimer();
     }
 
@@ -209,12 +170,10 @@ class CodeTimerTracker {
         if (!this.currentSession) return;
 
         if (this.currentSession.paused) {
-            // استئناف الجلسة
             this.currentSession.paused = false;
             this.currentSession.totalPausedTime += Date.now() - this.currentSession.lastPauseTime;
             this.currentSession.lastPauseTime = null;
         } else {
-            // إيقاف مؤقت الجلسة
             this.currentSession.paused = true;
             this.currentSession.lastPauseTime = Date.now();
         }
@@ -273,7 +232,6 @@ class CodeTimerTracker {
         this.showNotification('تم بدء جلسة سريعة لمدة ' + duration + ' دقيقة', 'success');
     }
 
-    // إدارة البومودورو
     togglePomodoro() {
         if (this.isPomodoroRunning) {
             this.stopPomodoro();
@@ -383,7 +341,6 @@ class CodeTimerTracker {
                 this.projects[index] = project;
             }
         } else {
-            // إضافة مشروع جديد
             this.projects.unshift(project);
         }
 
@@ -493,8 +450,6 @@ class CodeTimerTracker {
 
             var rateHtml = project.rate ? '<div class="project-rate">$' + project.rate + '/ساعة</div>' : '';
             var descriptionHtml = project.description ? '<div class="project-description">' + project.description + '</div>' : '';
-
-            // استخدام dataset لتخزين بيانات المشروع
             return '\
                 <div class="project-card" style="border-left-color: ' + project.color + '">\
                     <div class="project-header">\
@@ -527,8 +482,6 @@ class CodeTimerTracker {
                 </div>\
             ';
         }).join('');
-
-        // إضافة مستمعي الأحداث للأزرار الديناميكية
         container.querySelectorAll('.edit-project').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 var projectData = JSON.parse(this.getAttribute('data-project'));
@@ -664,7 +617,6 @@ class CodeTimerTracker {
     }
 
     updateCharts() {
-        // تنظيف الرسوم البيانية القديمة
         if (this.charts.projectsChart) {
             this.charts.projectsChart.destroy();
             this.charts.projectsChart = null;
@@ -675,8 +627,6 @@ class CodeTimerTracker {
     createProjectsChart() {
         var ctx = document.getElementById('projectsChart');
         if (!ctx) return;
-
-        // تنظيف Canvas أولاً
         var existingChart = Chart.getChart(ctx);
         if (existingChart) {
             existingChart.destroy();
@@ -697,8 +647,6 @@ class CodeTimerTracker {
             }
             projectData[projectName] += session.duration;
         });
-
-        // إذا لم توجد بيانات، لا تنشئ الرسم البياني
         if (Object.keys(projectData).length === 0) {
             return;
         }
@@ -709,7 +657,7 @@ class CodeTimerTracker {
                 labels: Object.keys(projectData),
                 datasets: [{
                     data: Object.values(projectData).map(function(duration) {
-                        return duration / 3600000; // تحويل إلى ساعات
+                        return duration / 3600000;
                     }),
                     backgroundColor: [
                         '#3498db', '#2ecc71', '#e74c3c', '#f39c12',
@@ -871,18 +819,13 @@ class CodeTimerTracker {
     }
 
     showNotification(message, type) {
-        // إزالة الإشعارات السابقة
         var existingNotification = document.querySelector('.notification');
         if (existingNotification) {
             existingNotification.remove();
         }
-
-        // إنشاء إشعار جديد
         var notification = document.createElement('div');
         notification.className = 'notification';
         notification.textContent = message;
-
-        // إضافة الأنماط
         var backgroundColor = type === 'error' ? '#e74c3c' :
             type === 'warning' ? '#f39c12' :
             type === 'success' ? '#2ecc71' : '#3498db';
@@ -906,13 +849,10 @@ class CodeTimerTracker {
         document.body.appendChild(notification);
 
         var self = this;
-        // عرض الإشعار
         setTimeout(function() {
             notification.style.transform = 'translateX(0)';
             notification.style.opacity = '1';
         }, 100);
-
-        // إخفاء الإشعار بعد 4 ثوان
         setTimeout(function() {
             notification.style.transform = 'translateX(-100%)';
             notification.style.opacity = '0';
@@ -925,7 +865,6 @@ class CodeTimerTracker {
     }
 }
 
-// تهيئة التطبيق عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', function() {
     window.codeTimerApp = new CodeTimerTracker();
     window.codeTimerApp.loadTheme();
