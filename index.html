@@ -12,7 +12,6 @@
 
 <body>
     <div class="container">
-        <!-- الرأس -->
         <header>
             <div class="header-main">
                 <h1><i class="fas fa-code"></i> Code Timer Tracker</h1>
@@ -30,7 +29,6 @@
             </div>
         </header>
 
-        <!-- التنقل -->
         <nav class="main-nav">
             <button class="nav-btn active" data-page="dashboard">
                 <i class="fas fa-chart-line"></i>
@@ -54,12 +52,9 @@
             </button>
         </nav>
 
-        <!-- الصفحات -->
         <main class="main-content">
-            <!-- صفحة لوحة التحكم -->
             <section id="dashboard" class="page active">
                 <div class="dashboard-grid">
-                    <!-- بطاقات الإحصائيات -->
                     <div class="stats-grid">
                         <div class="stat-card primary">
                             <div class="stat-icon">
@@ -99,7 +94,6 @@
                         </div>
                     </div>
 
-                    <!-- المؤقت السريع -->
                     <div class="quick-timer-card">
                         <h3>بدء جلسة سريعة</h3>
                         <div class="quick-actions">
@@ -122,7 +116,6 @@
                         </div>
                     </div>
 
-                    <!-- الرسوم البيانية -->
                     <div class="chart-card">
                         <h3>الوقت حسب المشاريع</h3>
                         <div class="chart-container">
@@ -130,17 +123,14 @@
                         </div>
                     </div>
 
-                    <!-- الجلسات الأخيرة -->
                     <div class="recent-sessions">
                         <h3>آخر الجلسات</h3>
                         <div class="sessions-list" id="recentSessionsList">
-                            <!-- الجلسات ستظهر هنا -->
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- صفحة المؤقت النشط -->
             <section id="timer" class="page">
                 <div class="timer-container">
                     <div class="current-session" id="currentSession">
@@ -172,7 +162,6 @@
                             </button>
                         </div>
 
-                        <!-- إعدادات الجلسة -->
                         <div class="session-settings">
                             <div class="setting-group">
                                 <label for="sessionProjectSelect">المشروع</label>
@@ -198,14 +187,12 @@
                             </div>
                         </div>
 
-                        <!-- ملاحظات الجلسة -->
                         <div class="session-notes">
                             <label for="sessionNotes">ملاحظات الجلسة</label>
                             <textarea id="sessionNotes" placeholder="ما الذي تعمل عليه؟ أي تحديات واجهتك؟"></textarea>
                         </div>
                     </div>
 
-                    <!-- مؤقت البومودورو -->
                     <div class="pomodoro-timer">
                         <h4>مؤقت البومودورو</h4>
                         <div class="pomodoro-display">
@@ -234,7 +221,6 @@
                 </div>
             </section>
 
-            <!-- صفحة المشاريع -->
             <section id="projects" class="page">
                 <div class="page-header">
                     <h2>إدارة المشاريع</h2>
@@ -244,11 +230,9 @@
                 </div>
 
                 <div class="projects-grid" id="projectsList">
-                    <!-- المشاريع ستظهر هنا -->
                 </div>
             </section>
 
-            <!-- صفحة سجل الجلسات -->
             <section id="sessions" class="page">
                 <div class="page-header">
                     <h2>سجل الجلسات</h2>
@@ -279,13 +263,11 @@
                             </tr>
                         </thead>
                         <tbody id="sessionsTableBody">
-                            <!-- صفوف الجلسات ستظهر هنا -->
                         </tbody>
                     </table>
                 </div>
             </section>
 
-            <!-- صفحة التقارير -->
             <section id="reports" class="page">
                 <div class="page-header">
                     <h2>التقارير والتحليلات</h2>
@@ -332,7 +314,6 @@
         </main>
     </div>
 
-    <!-- النماذج المنبثقة -->
     <div id="projectModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -364,7 +345,6 @@
         </div>
     </div>
 
-    <!-- ملفات الصوت -->
     <audio id="sessionStartSound" preload="auto">
         <source src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3" type="audio/mpeg">
     </audio>
