@@ -1,0 +1,47 @@
+name: 💡 Feature Request / اقتراح ميزة جديدة
+description: Suggest an idea or enhancement for Code Timer Tracker / اقتراح تحسين أو ميزة برمجية جديدة
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make developer time tracking faster, more intuitive, or more insightful?
+        هل لديك فكرة لجعل تجربة تتبع أوقات البرمجة وتحليل الإنتاجية أفضل؟
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement / المشكلة أو الحاجة
+      description: Is your feature request related to a specific pain point or developer workflow? / ما التحدي أو الاحتياج الذي تعالجه هذه الميزة؟
+      placeholder: "I find it challenging when trying to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution / الحل المقترح
+      description: Describe the solution you'd like to see implemented. / اشرح الفكرة والحل الذي تقترحه بالتفصيل.
+      placeholder: "Add a button or modal that allows..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered / البدائل المطروحة
+      description: Any alternative solutions or workarounds you considered. / أي بدائل أو حلول مؤقتة فكرت بها.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: local_first_check
+    attributes:
+      label: Architecture Alignment / التوافق مع معمارية التطبيق
+      description: Please verify alignment with core principles:
+      options:
+        - label: This feature respects 100% local-first privacy (no telemetry, no external database required).
+          required: true
+        - label: This feature works seamlessly offline.
+          required: true
