@@ -1,0 +1,69 @@
+name: 🐛 Bug Report / بلاغ عن خطأ
+description: File a clear bug report with steps to reproduce / الإبلاغ عن مشكلة برمجية
+title: "fix: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve **Code Timer Tracker**!
+        شكراً لمساعدتك في تحسين وتطوير تطبيق تتبع وقت البرمجة.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description / وصف المشكلة
+      description: A clear and concise description of what the bug is. / شرح موجز للمشكلة التي واجهتها.
+      placeholder: Describe what happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce / خطوات إعادة إنتاج المشكلة
+      description: How can we reproduce this behavior? / كيف يمكننا تكرار حدوث المشكلة؟
+      placeholder: |
+        1. Open Timer view
+        2. Click Start Session
+        3. Switch to Projects tab
+        4. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior / السلوك المتوقع
+      description: What did you expect to happen? / ما الذي كان ينبغي أن يحدث؟
+      placeholder: Expected the timer to continue running smoothly...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment / بيئة التشغيل
+      description: Where did you encounter this issue? / أين ظهرت المشكلة؟
+      options:
+        - Web App (Chrome / Edge / Firefox / Safari)
+        - Android Native APK (Offline)
+        - PWA (Installed on Desktop or Mobile)
+    validations:
+      required: true
+
+  - type: input
+    id: browser_os
+    attributes:
+      label: OS & Browser Version / نظام التشغيل والمتصفح
+      placeholder: "e.g., Windows 11 / Chrome 120, or Android 14"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context / سياق إضافي
+      description: Any logs, console output, or screenshots. / أي سجلات أخطاء أو لقطات شاشة مساعدة.
+    validations:
+      required: false
