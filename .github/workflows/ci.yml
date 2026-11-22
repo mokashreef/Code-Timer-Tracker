@@ -1,0 +1,57 @@
+name: CI Pipeline & Quality Checks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Node.js Test Suite (${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Validate JSON Schemas
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('package.json', 'utf8')); console.log('✓ package.json is valid');"
+          node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8')); console.log('✓ manifest.json is valid');"
+
+      - name: Execute Native Test Engine
+        run: npm test
+
+  quality:
+    name: Code & Asset Integrity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check Critical Files Existence
+        run: |
+          test -f index.html || exit 1
+          test -f script.js || exit 1
+          test -f style.css || exit 1
+          test -f sw.js || exit 1
+          test -f manifest.json || exit 1
+          test -f README.md || exit 1
+          test -f README.ar.md || exit 1
+          echo "✓ All core distribution files are present."
