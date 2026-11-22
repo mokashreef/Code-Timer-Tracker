@@ -6,11 +6,12 @@
 
 **[ 🌐 English (Default) ](README.md) • [ 🌐 النسخة العربية (Arabic) ](README.ar.md)**
 
-[![Version](https://img.shields.io/badge/Version-v2.4.3-10b981?style=flat-square)](https://github.com/mokashreef/Code-Timer-Tracker)
+[![Version](https://img.shields.io/badge/Version-v2.5.0-10b981?style=flat-square)](https://github.com/mokashreef/Code-Timer-Tracker)
+[![CI](https://github.com/mokashreef/Code-Timer-Tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/mokashreef/Code-Timer-Tracker/actions/workflows/ci.yml)
 [![Android APK](https://img.shields.io/badge/Android%20APK-100%25%20Offline%20(1.7MB)-success?style=flat-square&logo=android)](release/code-timer-tracker.apk)
 [![PWA Ready](https://img.shields.io/badge/PWA-100%25%20Offline%20Cache-blueviolet?style=flat-square)](manifest.json)
 [![License](https://img.shields.io/badge/License-MIT-3b82f6?style=flat-square)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-9%20Passing%20(100%25)-emerald?style=flat-square)](tests/test_engine.js)
+[![Tests](https://img.shields.io/badge/Tests-12%20Passing%20(100%25)-emerald?style=flat-square)](tests/test_engine.js)
 [![Privacy](https://img.shields.io/badge/Data-100%25%20Local%20(No%20Telemetry)-06b6d4?style=flat-square)](#)
 
 **Developed by [Mohammad Abu Khashreef](https://mohammad.code-elta6ur.com/) • Part of [Code Elta6ur](https://code-elta6ur.net/)**

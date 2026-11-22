@@ -3754,3 +3754,87 @@ html.is-mobile-device .mobile-sessions-feed {
     }
 }
 
+/* =====================================================================
+   PWA Offline Update Toast
+   ===================================================================== */
+.pwa-update-toast {
+    background: #1e293b;
+    color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pwa-update-toast button:hover {
+    background: #1d4ed8 !important;
+}
+
+/* =====================================================================
+   Print & PDF Export Styling (@media print)
+   ===================================================================== */
+@media print {
+    body {
+        background: #ffffff !important;
+        color: #111827 !important;
+        font-family: 'Inter', 'Cairo', -apple-system, sans-serif !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Hide standard interactive chrome */
+    .app-sidebar,
+    .app-header,
+    .toolbar-actions,
+    .filter-bar-card,
+    .pagination-bar,
+    .fab-btn,
+    .command-palette-modal,
+    .modal-container,
+    .toast-container,
+    #toastContainer,
+    .pwa-update-toast,
+    .action-cell {
+        display: none !important;
+    }
+
+    .app-main {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    .card {
+        background: #ffffff !important;
+        border: 1px solid #e5e7eb !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+    }
+
+    .data-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 11px !important;
+    }
+
+    .data-table th,
+    .data-table td {
+        border: 1px solid #d1d5db !important;
+        color: #111827 !important;
+        padding: 6px 8px !important;
+        page-break-inside: avoid;
+    }
+
+    .data-table th {
+        background: #f3f4f6 !important;
+        font-weight: 700 !important;
+    }
+
+    .badge {
+        border: 1px solid #9ca3af !important;
+        color: #111827 !important;
+        background: transparent !important;
+    }
+}
+
+

@@ -6,11 +6,12 @@
 
 **[ 🌐 English Version ](README.md) • [ 🌐 النسخة العربية ](README.ar.md)**
 
-[![الإصدار](https://img.shields.io/badge/الإصدار-v2.4.3-10b981?style=flat-square)](https://github.com/mokashreef/Code-Timer-Tracker)
+[![الإصدار](https://img.shields.io/badge/الإصدار-v2.5.0-10b981?style=flat-square)](https://github.com/mokashreef/Code-Timer-Tracker)
+[![CI](https://github.com/mokashreef/Code-Timer-Tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/mokashreef/Code-Timer-Tracker/actions/workflows/ci.yml)
 [![تطبيق أندرويد](https://img.shields.io/badge/تطبيق%20أندرويد%20APK-يعمل%20100%25%20بدون%20إنترنت%20(1.7MB)-success?style=flat-square&logo=android)](release/code-timer-tracker.apk)
 [![PWA جاهز](https://img.shields.io/badge/PWA-كاش%20كامل%20بدون%20نت-blueviolet?style=flat-square)](manifest.json)
 [![الترخيص](https://img.shields.io/badge/الترخيص-MIT-3b82f6?style=flat-square)](LICENSE)
-[![الاختبارات](https://img.shields.io/badge/الاختبارات-9%20ناجحة%20(100%25)-emerald?style=flat-square)](tests/test_engine.js)
+[![الاختبارات](https://img.shields.io/badge/الاختبارات-12%20ناجحة%20(100%25)-emerald?style=flat-square)](tests/test_engine.js)
 [![الخصوصية](https://img.shields.io/badge/البيانات-محلية%20100%25%20(بدون%20تتبع)-06b6d4?style=flat-square)](#)
 
 **تطوير: [محمد أبو خشريف](https://mohammad.code-elta6ur.com/) • جزء من منظومة [كود التطور (Code Elta6ur)](https://code-elta6ur.net/)**

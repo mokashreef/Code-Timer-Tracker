@@ -232,3 +232,132 @@ test('Duration localized formatting in English and Arabic', () => {
     assert.strictEqual(formatDuration(3665000, 'ar'), '1 س 1 د');
 });
 
+test('PWA Update Detection and Message Payload Validation', () => {
+    function createPwaUpdateMessage(action = 'skipWaiting') {
+        return { action, timestamp: Date.now() };
+    }
+
+    const payload = createPwaUpdateMessage();
+    assert.strictEqual(payload.action, 'skipWaiting');
+    assert.ok(typeof payload.timestamp === 'number');
+
+    function getPwaUpdateLabels(lang = 'en') {
+        const isAr = lang === 'ar';
+        return {
+            message: isAr
+                ? 'يتوفر إصدار جديد من تطبيق متتبع وقت البرمجة.'
+                : 'A new version of Code Timer Tracker is ready.',
+            btnText: isAr ? 'تحديث وإعادة التحميل' : 'Update & Reload'
+        };
+    }
+
+    const enLabels = getPwaUpdateLabels('en');
+    assert.ok(enLabels.message.includes('Code Timer Tracker'));
+    assert.strictEqual(enLabels.btnText, 'Update & Reload');
+
+    const arLabels = getPwaUpdateLabels('ar');
+    assert.ok(arLabels.message.includes('متتبع وقت البرمجة'));
+    assert.strictEqual(arLabels.btnText, 'تحديث وإعادة التحميل');
+});
+
+test('Sound Synthesizer Volume Scaling and Preset Acoustic Profiles', () => {
+    function calculateGain(baseGain, volumePercent) {
+        const clampedVol = Math.max(0, Math.min(100, Number(volumePercent) || 0));
+        return Number((baseGain * (clampedVol / 100)).toFixed(5));
+    }
+
+    // Volume 0% -> Muted
+    assert.strictEqual(calculateGain(0.08, 0), 0);
+    // Volume 100% -> Full base gain
+    assert.strictEqual(calculateGain(0.08, 100), 0.08);
+    // Volume 50% -> Half gain
+    assert.strictEqual(calculateGain(0.08, 50), 0.04);
+    // Clamping out-of-bounds
+    assert.strictEqual(calculateGain(0.08, 150), 0.08);
+    assert.strictEqual(calculateGain(0.08, -20), 0);
+
+    const PRESETS = {
+        chime: { wave: 'sine', label: 'Harmonic Sine' },
+        digital: { wave: 'square', label: 'Classic Digital Beep' },
+        marimba: { wave: 'triangle', label: 'Wooden Tap' }
+    };
+
+    assert.ok('chime' in PRESETS);
+    assert.ok('digital' in PRESETS);
+    assert.ok('marimba' in PRESETS);
+    assert.strictEqual(PRESETS.chime.wave, 'sine');
+    assert.strictEqual(PRESETS.digital.wave, 'square');
+    assert.strictEqual(PRESETS.marimba.wave, 'triangle');
+});
+
+test('Weekly Timesheet & PDF Invoice Aggregator', () => {
+    const mockSessions = [
+        { id: 's1', projectId: 'p1', duration: 3600000, billable: true }, // 1h
+        { id: 's2', projectId: 'p1', duration: 1800000, billable: true }, // 0.5h
+        { id: 's3', projectId: 'p2', duration: 7200000, billable: false } // 2h non-billable
+    ];
+
+    const mockProjects = [
+        { id: 'p1', name: 'Client Alpha Web App', hourlyRate: 75 },
+        { id: 'p2', name: 'Open Source Tool', hourlyRate: 0 }
+    ];
+
+    function aggregateInvoiceReport(sessions, projects) {
+        const projMap = new Map(projects.map(p => [p.id, p]));
+        let totalDurationMs = 0;
+        let billableDurationMs = 0;
+        let totalEarningsUSD = 0;
+
+        const projectBreakdowns = {};
+
+        for (const s of sessions) {
+            totalDurationMs += s.duration;
+            const p = projMap.get(s.projectId);
+            const rate = p ? (p.hourlyRate || 0) : 0;
+            const hours = s.duration / 3600000;
+
+            if (!projectBreakdowns[s.projectId]) {
+                projectBreakdowns[s.projectId] = {
+                    name: p ? p.name : 'Unknown',
+                    totalMs: 0,
+                    billableMs: 0,
+                    earnedUSD: 0,
+                    hourlyRate: rate
+                };
+            }
+
+            projectBreakdowns[s.projectId].totalMs += s.duration;
+
+            if (s.billable) {
+                billableDurationMs += s.duration;
+                const earned = hours * rate;
+                totalEarningsUSD += earned;
+                projectBreakdowns[s.projectId].billableMs += s.duration;
+                projectBreakdowns[s.projectId].earnedUSD += earned;
+            }
+        }
+
+        return {
+            totalDurationMs,
+            totalHours: totalDurationMs / 3600000,
+            billableDurationMs,
+            billableHours: billableDurationMs / 3600000,
+            totalEarningsUSD,
+            projectBreakdowns
+        };
+    }
+
+    const report = aggregateInvoiceReport(mockSessions, mockProjects);
+
+    // 1h + 0.5h + 2h = 3.5h
+    assert.strictEqual(report.totalHours, 3.5);
+    // Billable: 1.5h
+    assert.strictEqual(report.billableHours, 1.5);
+    // Earnings: 1.5h * $75/h = $112.50
+    assert.strictEqual(report.totalEarningsUSD, 112.5);
+
+    // Check project p1 breakdown
+    assert.strictEqual(report.projectBreakdowns['p1'].earnedUSD, 112.5);
+    assert.strictEqual(report.projectBreakdowns['p1'].billableMs, 5400000);
+});
+

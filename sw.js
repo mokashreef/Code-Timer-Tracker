@@ -3,13 +3,13 @@
    Guarantees 100% Offline Capability & Instant Cache-First Response
    ===================================================================== */
 
-const CACHE_NAME = 'code-timer-tracker-v2.4.3';
+const CACHE_NAME = 'code-timer-tracker-v2.5.0';
 
 const PRECACHE_URLS = [
     './',
     './index.html',
-    './style.css?v=2.4.3',
-    './script.js?v=2.4.3',
+    './style.css?v=2.5.0',
+    './script.js?v=2.5.0',
     './manifest.json',
     './vendor/chart.umd.min.js',
     './vendor/fontawesome/js/all.min.js',
@@ -37,6 +37,12 @@ self.addEventListener('activate', (event) => {
             );
         }).then(() => self.clients.claim())
     );
+});
+
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.action === 'skipWaiting') {
+        self.skipWaiting();
+    }
 });
 
 self.addEventListener('fetch', (event) => {

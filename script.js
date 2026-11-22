@@ -131,6 +131,7 @@ const I18N = {
         log_past_session: "Log Past Session",
         export_csv: "Export CSV",
         export_json: "Export JSON",
+        export_pdf: "Export PDF Timesheet",
         search_sessions_placeholder: "Search notes, task title, tags...",
         all_projects: "All Projects",
         all_dates: "All Dates",
@@ -197,6 +198,12 @@ const I18N = {
         opt_en: "English (EN)",
         opt_ar: "العربية (AR)",
         settings_sound: "Enable procedural synthesizer audio cues (Web Audio API)",
+        settings_sound_preset: "Sound Tone Preset",
+        settings_sound_volume: "Volume Level",
+        settings_sound_preview: "Test Chime",
+        opt_preset_chime: "Bell / Chime (Harmonic Sine)",
+        opt_preset_digital: "Digital Pulse (Classic Beep)",
+        opt_preset_marimba: "Marimba / Wooden Tap",
         settings_notif: "Request browser desktop notifications for intervals",
         settings_save_btn: "Save Preferences",
         storage_title: "Storage & Data Portability",
@@ -471,6 +478,7 @@ const I18N = {
         log_past_session: "تسجيل جلسة سابقة",
         export_csv: "تصدير CSV",
         export_json: "تصدير JSON",
+        export_pdf: "تصدير تقرير PDF",
         search_sessions_placeholder: "ابحث في الملاحظات، عنوان المهمة، الوسوم...",
         all_projects: "جميع المشاريع",
         all_dates: "كافة التواريخ",
@@ -537,6 +545,12 @@ const I18N = {
         opt_en: "English (EN)",
         opt_ar: "العربية (AR)",
         settings_sound: "تفعيل المؤثرات الصوتية الاصطناعية (Web Audio API)",
+        settings_sound_preset: "نغمة التنبيه",
+        settings_sound_volume: "مستوى الصوت",
+        settings_sound_preview: "تجربة النغمة",
+        opt_preset_chime: "جرس متناغم (Harmonic Sine)",
+        opt_preset_digital: "نبض رقمي (Classic Beep)",
+        opt_preset_marimba: "ماريمبا خشبية (Wooden Tap)",
         settings_notif: "طلب إشعارات المتصفح لانتهاء فترات العمل والاستراحة",
         settings_save_btn: "حفظ التفضيلات",
         storage_title: "التخزين والنسخ الاحتياطي",
@@ -730,6 +744,8 @@ class StorageManager {
                 weekStart: 'sunday',
                 timeFormat: '24h',
                 soundEnabled: true,
+                soundVolume: 80,
+                soundPreset: 'chime',
                 notificationsEnabled: false,
                 pomoWorkMinutes: 25,
                 pomoBreakMinutes: 5
@@ -769,12 +785,17 @@ class StorageManager {
 
     static normalizeState(data) {
         const defaults = this.getDefaultState();
+        let audioPrefs = {};
+        try {
+            const rawAudio = localStorage.getItem('code_timer_audio_settings');
+            if (rawAudio) audioPrefs = JSON.parse(rawAudio);
+        } catch (_) {}
         return {
             version: '2.0',
             projects: Array.isArray(data.projects) ? data.projects : defaults.projects,
             tasks: Array.isArray(data.tasks) ? data.tasks : defaults.tasks,
             sessions: Array.isArray(data.sessions) ? data.sessions : [],
-            settings: { ...defaults.settings, ...(data.settings || {}) }
+            settings: { ...defaults.settings, ...audioPrefs, ...(data.settings || {}) }
         };
     }
 
@@ -823,6 +844,13 @@ class StorageManager {
     static save(data) {
         try {
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+            if (data?.settings) {
+                const audioPrefs = {
+                    soundVolume: data.settings.soundVolume ?? 80,
+                    soundPreset: data.settings.soundPreset ?? 'chime'
+                };
+                localStorage.setItem('code_timer_audio_settings', JSON.stringify(audioPrefs));
+            }
         } catch (err) {
             console.error('Storage write error:', err);
         }
@@ -853,8 +881,10 @@ class StorageManager {
 }
 
 class SoundSynthesizer {
-    constructor(enabled = true) {
+    constructor(enabled = true, volume = 80, preset = 'chime') {
         this.enabled = enabled;
+        this.volume = Math.max(0, Math.min(100, Number(volume) || 0));
+        this.preset = ['chime', 'digital', 'marimba'].includes(preset) ? preset : 'chime';
         this.ctx = null;
     }
 
@@ -868,8 +898,18 @@ class SoundSynthesizer {
         }
     }
 
-    playTone(frequency, type, duration, gainValue = 0.08) {
-        if (!this.enabled) return;
+    setVolume(vol) {
+        this.volume = Math.max(0, Math.min(100, Number(vol) || 0));
+    }
+
+    setPreset(preset) {
+        if (['chime', 'digital', 'marimba'].includes(preset)) {
+            this.preset = preset;
+        }
+    }
+
+    playTone(frequency, type, duration, baseGain = 0.08) {
+        if (!this.enabled || this.volume <= 0) return;
         try {
             this.initCtx();
             if (!this.ctx) return;
@@ -877,7 +917,8 @@ class SoundSynthesizer {
             const gain = this.ctx.createGain();
             osc.type = type;
             osc.frequency.setValueAtTime(frequency, this.ctx.currentTime);
-            gain.gain.setValueAtTime(gainValue, this.ctx.currentTime);
+            const effectiveGain = baseGain * (this.volume / 100);
+            gain.gain.setValueAtTime(effectiveGain, this.ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
@@ -889,22 +930,62 @@ class SoundSynthesizer {
     }
 
     playStart() {
-        this.playTone(523.25, 'sine', 0.12, 0.08); // C5
-        setTimeout(() => this.playTone(659.25, 'sine', 0.18, 0.08), 80); // E5
+        if (this.preset === 'digital') {
+            this.playTone(880, 'square', 0.08, 0.06);
+            setTimeout(() => this.playTone(1760, 'square', 0.12, 0.06), 70);
+        } else if (this.preset === 'marimba') {
+            this.playTone(440, 'triangle', 0.18, 0.1);
+            setTimeout(() => this.playTone(554.37, 'triangle', 0.22, 0.1), 80);
+        } else {
+            // chime default
+            this.playTone(523.25, 'sine', 0.12, 0.08); // C5
+            setTimeout(() => this.playTone(659.25, 'sine', 0.18, 0.08), 80); // E5
+        }
     }
 
     playPause() {
-        this.playTone(440, 'triangle', 0.15, 0.06); // A4
+        if (this.preset === 'digital') {
+            this.playTone(600, 'square', 0.1, 0.05);
+        } else if (this.preset === 'marimba') {
+            this.playTone(392, 'triangle', 0.16, 0.08);
+        } else {
+            this.playTone(440, 'triangle', 0.15, 0.06); // A4
+        }
     }
 
     playStop() {
-        this.playTone(659.25, 'sine', 0.12, 0.08); // E5
-        setTimeout(() => this.playTone(523.25, 'sine', 0.22, 0.08), 90); // C5
+        if (this.preset === 'digital') {
+            this.playTone(1760, 'square', 0.08, 0.06);
+            setTimeout(() => this.playTone(880, 'square', 0.15, 0.06), 80);
+        } else if (this.preset === 'marimba') {
+            this.playTone(554.37, 'triangle', 0.15, 0.09);
+            setTimeout(() => this.playTone(440, 'triangle', 0.25, 0.09), 90);
+        } else {
+            this.playTone(659.25, 'sine', 0.12, 0.08); // E5
+            setTimeout(() => this.playTone(523.25, 'sine', 0.22, 0.08), 90); // C5
+        }
     }
 
     playBreakChime() {
-        this.playTone(783.99, 'sine', 0.2, 0.09); // G5
-        setTimeout(() => this.playTone(987.77, 'sine', 0.3, 0.09), 120); // B5
+        if (this.preset === 'digital') {
+            this.playTone(1046.5, 'square', 0.1, 0.06);
+            setTimeout(() => this.playTone(1318.5, 'square', 0.1, 0.06), 90);
+            setTimeout(() => this.playTone(2093.0, 'square', 0.2, 0.06), 180);
+        } else if (this.preset === 'marimba') {
+            this.playTone(523.25, 'triangle', 0.18, 0.1);
+            setTimeout(() => this.playTone(659.25, 'triangle', 0.2, 0.1), 100);
+            setTimeout(() => this.playTone(783.99, 'triangle', 0.3, 0.1), 200);
+        } else {
+            this.playTone(783.99, 'sine', 0.2, 0.09); // G5
+            setTimeout(() => this.playTone(987.77, 'sine', 0.3, 0.09), 120); // B5
+        }
+    }
+
+    previewPreset(preset) {
+        const prev = this.preset;
+        this.setPreset(preset);
+        this.playBreakChime();
+        this.setPreset(prev);
     }
 }
 
@@ -912,7 +993,11 @@ class AppEngine {
     constructor() {
         window.appEngine = this;
         this.state = StorageManager.load();
-        this.synth = new SoundSynthesizer(this.state.settings.soundEnabled);
+        this.synth = new SoundSynthesizer(
+            this.state.settings.soundEnabled,
+            this.state.settings.soundVolume ?? 80,
+            this.state.settings.soundPreset ?? 'chime'
+        );
         this.activeSession = null;
         this.timerInterval = null;
         this.currentPage = 'dashboard';
@@ -1062,6 +1147,12 @@ class AppEngine {
             settingWeekStart: document.getElementById('settingWeekStart'),
             settingTimeFormat: document.getElementById('settingTimeFormat'),
             settingSoundToggle: document.getElementById('settingSoundToggle'),
+            settingSoundPreset: document.getElementById('settingSoundPreset'),
+            settingSoundVolume: document.getElementById('settingSoundVolume'),
+            soundVolumeLabel: document.getElementById('soundVolumeLabel'),
+            btnPreviewSound: document.getElementById('btnPreviewSound'),
+            audioSettingsGroup: document.getElementById('audioSettingsGroup'),
+            exportPdfBtn: document.getElementById('exportPdfBtn'),
             settingNotificationsToggle: document.getElementById('settingNotificationsToggle'),
             storageSessionsCount: document.getElementById('storageSessionsCount'),
             storageProjectsCount: document.getElementById('storageProjectsCount'),
@@ -1236,6 +1327,7 @@ class AppEngine {
         document.getElementById('logManualBtn')?.addEventListener('click', () => this.openManualSessionModal());
         document.getElementById('exportCsvBtn')?.addEventListener('click', () => this.exportCsv());
         document.getElementById('exportJsonBtn')?.addEventListener('click', () => this.exportJsonBackup());
+        document.getElementById('exportPdfBtn')?.addEventListener('click', () => this.exportPdfReport());
 
         this.dom.sessionSearchInput?.addEventListener('input', () => this.applySessionFilters());
         this.dom.sessionFilterProject?.addEventListener('change', () => this.applySessionFilters());
@@ -1284,8 +1376,12 @@ class AppEngine {
                 this.state.settings.language = this.dom.settingLanguage.value;
             }
             this.state.settings.soundEnabled = this.dom.settingSoundToggle.checked;
+            this.state.settings.soundVolume = Number(this.dom.settingSoundVolume?.value) || 80;
+            this.state.settings.soundPreset = this.dom.settingSoundPreset?.value || 'chime';
             this.state.settings.notificationsEnabled = this.dom.settingNotificationsToggle.checked;
             this.synth.enabled = this.state.settings.soundEnabled;
+            this.synth.setVolume(this.state.settings.soundVolume);
+            this.synth.setPreset(this.state.settings.soundPreset);
 
             if (this.state.settings.notificationsEnabled && 'Notification' in window) {
                 Notification.requestPermission();
@@ -1294,6 +1390,29 @@ class AppEngine {
             this.saveState();
             this.renderDashboard();
             this.showToast('Productivity targets and preferences saved.', 'success');
+        });
+
+        // Audio controls interactive listeners
+        this.dom.settingSoundToggle?.addEventListener('change', (e) => {
+            if (this.dom.audioSettingsGroup) {
+                this.dom.audioSettingsGroup.style.display = e.target.checked ? 'block' : 'none';
+            }
+        });
+
+        this.dom.settingSoundVolume?.addEventListener('input', (e) => {
+            const val = Number(e.target.value) || 0;
+            if (this.dom.soundVolumeLabel) this.dom.soundVolumeLabel.textContent = `${val}%`;
+            this.synth.setVolume(val);
+            this.state.settings.soundVolume = val;
+        });
+
+        this.dom.settingSoundPreset?.addEventListener('change', (e) => {
+            this.synth.setPreset(e.target.value);
+            this.state.settings.soundPreset = e.target.value;
+        });
+
+        this.dom.btnPreviewSound?.addEventListener('click', () => {
+            this.synth.previewPreset(this.synth.preset);
         });
 
         this.dom.btnDownloadBackup?.addEventListener('click', () => this.exportJsonBackup());
@@ -3118,6 +3237,10 @@ class AppEngine {
         if (this.dom.settingTimeFormat) this.dom.settingTimeFormat.value = this.state.settings.timeFormat || '24h';
         if (this.dom.settingLanguage) this.dom.settingLanguage.value = this.state.settings.language || 'en';
         if (this.dom.settingSoundToggle) this.dom.settingSoundToggle.checked = !!this.state.settings.soundEnabled;
+        if (this.dom.settingSoundPreset) this.dom.settingSoundPreset.value = this.state.settings.soundPreset || 'chime';
+        if (this.dom.settingSoundVolume) this.dom.settingSoundVolume.value = this.state.settings.soundVolume ?? 80;
+        if (this.dom.soundVolumeLabel) this.dom.soundVolumeLabel.textContent = `${this.state.settings.soundVolume ?? 80}%`;
+        if (this.dom.audioSettingsGroup) this.dom.audioSettingsGroup.style.display = this.state.settings.soundEnabled ? 'block' : 'none';
         if (this.dom.settingNotificationsToggle) this.dom.settingNotificationsToggle.checked = !!this.state.settings.notificationsEnabled;
 
         const isAr = this.state.settings?.language === 'ar';
@@ -3214,6 +3337,315 @@ class AppEngine {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         this.showToast('JSON backup exported.', 'success');
+    }
+
+    exportPdfReport() {
+        const sessionsToExport = (this.sessionsPagination && this.sessionsPagination.filtered && this.sessionsPagination.filtered.length > 0)
+            ? this.sessionsPagination.filtered
+            : this.state.sessions;
+
+        if (!sessionsToExport || sessionsToExport.length === 0) {
+            this.showToast(this.state.settings?.language === 'ar' ? 'لا توجد جلسات مسجلة لتصديرها.' : 'No recorded sessions to export.', 'warning');
+            return;
+        }
+
+        const isAr = this.state.settings?.language === 'ar';
+        const projectMap = new Map(this.state.projects.map(p => [p.id, p]));
+
+        // Calculate statistics
+        let totalDurationMs = 0;
+        let billableDurationMs = 0;
+        let totalEarningsUSD = 0;
+        const projectSummary = {};
+
+        for (const s of sessionsToExport) {
+            totalDurationMs += (s.duration || 0);
+            const p = projectMap.get(s.projectId);
+            const rate = p ? (p.hourlyRate || 0) : 0;
+            const hours = (s.duration || 0) / 3600000;
+
+            const projKey = s.projectId || 'unassigned';
+            if (!projectSummary[projKey]) {
+                projectSummary[projKey] = {
+                    name: p ? p.name : (isAr ? 'مشروع غير محدد' : 'Unassigned Project'),
+                    category: p ? (p.category || 'General') : 'General',
+                    color: p ? (p.color || '#3b82f6') : '#94a3b8',
+                    totalMs: 0,
+                    billableMs: 0,
+                    earnedUSD: 0,
+                    hourlyRate: rate
+                };
+            }
+
+            projectSummary[projKey].totalMs += s.duration;
+
+            if (s.billable) {
+                billableDurationMs += s.duration;
+                const earned = hours * rate;
+                totalEarningsUSD += earned;
+                projectSummary[projKey].billableMs += s.duration;
+                projectSummary[projKey].earnedUSD += earned;
+            }
+        }
+
+        const totalHoursFormatted = (totalDurationMs / 3600000).toFixed(2);
+        const billableHoursFormatted = (billableDurationMs / 3600000).toFixed(2);
+        const totalEarningsFormatted = `$${totalEarningsUSD.toFixed(2)}`;
+
+        // Date range
+        const dates = sessionsToExport.map(s => new Date(s.startTime).getTime()).filter(t => !isNaN(t)).sort((a, b) => a - b);
+        const minDate = dates.length > 0 ? new Date(dates[0]).toLocaleDateString(isAr ? 'ar-EG' : 'en-US') : 'N/A';
+        const maxDate = dates.length > 0 ? new Date(dates[dates.length - 1]).toLocaleDateString(isAr ? 'ar-EG' : 'en-US') : 'N/A';
+        const dateRangeStr = `${minDate} — ${maxDate}`;
+
+        // Construct standalone printable HTML
+        const printDoc = `<!DOCTYPE html>
+<html lang="${isAr ? 'ar' : 'en'}" dir="${isAr ? 'rtl' : 'ltr'}">
+<head>
+    <meta charset="UTF-8">
+    <title>${isAr ? 'تقرير ساعات العمل والفواتير' : 'Timesheet & Invoice Report'} — Code Timer Tracker</title>
+    <style>
+        body {
+            font-family: ${isAr ? "'Cairo', sans-serif" : "'Inter', -apple-system, sans-serif"};
+            margin: 0;
+            padding: 30px;
+            color: #111827;
+            background: #ffffff;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+        }
+        .brand-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1e3a8a;
+            margin: 0 0 4px 0;
+        }
+        .brand-sub {
+            font-size: 12px;
+            color: #6b7280;
+            margin: 0;
+        }
+        .invoice-meta {
+            text-align: ${isAr ? 'left' : 'right'};
+            font-size: 12px;
+            color: #4b5563;
+        }
+        .meta-tag {
+            display: inline-block;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .metric-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+        }
+        .metric-val {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+        .metric-label {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 24px 0 12px 0;
+            border-left: ${isAr ? 'none' : '4px solid #2563eb'};
+            border-right: ${isAr ? '4px solid #2563eb' : 'none'};
+            padding-left: ${isAr ? '0' : '10px'};
+            padding-right: ${isAr ? '10px' : '0'};
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+            font-size: 12px;
+        }
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 8px 10px;
+            text-align: ${isAr ? 'right' : 'left'};
+        }
+        th {
+            background: #f1f5f9;
+            font-weight: 700;
+            color: #334155;
+        }
+        tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+        .tag-billable {
+            display: inline-block;
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .tag-non-billable {
+            display: inline-block;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        @media print {
+            body { padding: 15px; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <div class="brand-title">Code Timer Tracker ⏱️</div>
+            <div class="brand-sub">${isAr ? 'منظومة كود التطور للبرمجيات • إشراف م. محمد أبو خشريف' : 'Code Elta6ur Software Ecosystem • Directed by Eng. Mohammad Abu Kashreef'}</div>
+        </div>
+        <div class="invoice-meta">
+            <div class="meta-tag">${isAr ? 'تقرير الفوترة والوقت' : 'OFFICIAL TIMESHEET'}</div>
+            <div><strong>${isAr ? 'الفترة:' : 'Date Range:'}</strong> ${dateRangeStr}</div>
+            <div><strong>${isAr ? 'تاريخ الاستخراج:' : 'Generated:'}</strong> ${new Date().toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}</div>
+        </div>
+    </div>
+
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-val">${sessionsToExport.length}</div>
+            <div class="metric-label">${isAr ? 'إجمالي الجلسات' : 'Total Sessions'}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-val">${totalHoursFormatted} h</div>
+            <div class="metric-label">${isAr ? 'إجمالي الساعات' : 'Total Hours'}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-val">${billableHoursFormatted} h</div>
+            <div class="metric-label">${isAr ? 'ساعات قابلة للفوترة' : 'Billable Hours'}</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-val" style="color: #16a34a;">${totalEarningsFormatted}</div>
+            <div class="metric-label">${isAr ? 'إجمالي المستحقات (USD)' : 'Total Billed (USD)'}</div>
+        </div>
+    </div>
+
+    <h2>${isAr ? 'ملخص المشاريع' : 'Project Breakdown'}</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>${isAr ? 'المشروع' : 'Project'}</th>
+                <th>${isAr ? 'التصنيف' : 'Category'}</th>
+                <th>${isAr ? 'سعر الساعة' : 'Rate (USD)'}</th>
+                <th>${isAr ? 'إجمالي الساعات' : 'Total Hours'}</th>
+                <th>${isAr ? 'ساعات الفوترة' : 'Billable Hours'}</th>
+                <th>${isAr ? 'المستحق' : 'Amount (USD)'}</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${Object.values(projectSummary).map(p => `
+                <tr>
+                    <td><strong>${this.escapeHtml(p.name)}</strong></td>
+                    <td>${this.escapeHtml(p.category)}</td>
+                    <td>$${p.hourlyRate}/h</td>
+                    <td>${(p.totalMs / 3600000).toFixed(2)} h</td>
+                    <td>${(p.billableMs / 3600000).toFixed(2)} h</td>
+                    <td><strong>$${p.earnedUSD.toFixed(2)}</strong></td>
+                </tr>
+            `).join('')}
+        </tbody>
+    </table>
+
+    <h2>${isAr ? 'تفاصيل الجلسات' : 'Detailed Session Log'}</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>${isAr ? 'التاريخ' : 'Date'}</th>
+                <th>${isAr ? 'المشروع' : 'Project'}</th>
+                <th>${isAr ? 'المهمة / التفاصيل' : 'Task / Notes'}</th>
+                <th>${isAr ? 'المدة' : 'Duration'}</th>
+                <th>${isAr ? 'الفوترة' : 'Billable'}</th>
+                <th>${isAr ? 'القيمة' : 'Value'}</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${sessionsToExport.map(s => {
+                const proj = projectMap.get(s.projectId);
+                const rate = proj ? (proj.hourlyRate || 0) : 0;
+                const hours = (s.duration || 0) / 3600000;
+                const earned = s.billable ? hours * rate : 0;
+                const dateStr = s.startTime ? new Date(s.startTime).toLocaleDateString(isAr ? 'ar-EG' : 'en-US') : '—';
+                return `
+                    <tr>
+                        <td>${dateStr}</td>
+                        <td>${this.escapeHtml(proj ? proj.name : '—')}</td>
+                        <td>${this.escapeHtml(s.taskTitle || s.task || '—')}</td>
+                        <td>${this.formatDuration(s.duration)}</td>
+                        <td>${s.billable ? `<span class="tag-billable">${isAr ? 'مدفوع' : 'Billable'}</span>` : `<span class="tag-non-billable">${isAr ? 'غير مدفوع' : 'Non-billable'}</span>`}</td>
+                        <td>${s.billable ? `$${earned.toFixed(2)}` : '—'}</td>
+                    </tr>
+                `;
+            }).join('')}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        100% Client-Side Local Verification • Generated by Code Timer Tracker • https://code-elta6ur.net
+    </div>
+
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                window.print();
+            }, 300);
+        });
+    </script>
+</body>
+</html>`;
+
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+            printWindow.document.open();
+            printWindow.document.write(printDoc);
+            printWindow.document.close();
+        } else {
+            window.print();
+        }
+        this.showToast(isAr ? 'جاري فتح نافذة طباعة وتصدير PDF...' : 'Opening PDF print preview...', 'info');
     }
 
     handleBackupImport(e) {
@@ -3523,10 +3955,72 @@ function initCodeTimerTracker() {
     applyMobileEnvironment();
     window.addEventListener('resize', applyMobileEnvironment);
 
+    // Show PWA Update Notification Toast
+    function showPwaUpdateToast(registration) {
+        if (document.getElementById('pwaUpdateToast')) return;
+
+        const lang = window.appEngine?.state?.settings?.language || document.documentElement.lang || 'en';
+        const isAr = lang === 'ar';
+        const msg = isAr 
+            ? 'يتوفر إصدار جديد من تطبيق متتبع وقت البرمجة.' 
+            : 'A new version of Code Timer Tracker is ready.';
+        const btnText = isAr ? 'تحديث وإعادة التحميل' : 'Update & Reload';
+
+        const toastContainer = document.getElementById('toastContainer') || document.body;
+        const toast = document.createElement('div');
+        toast.id = 'pwaUpdateToast';
+        toast.className = 'toast info pwa-update-toast';
+        toast.style.display = 'flex';
+        toast.style.alignItems = 'center';
+        toast.style.gap = '12px';
+        toast.style.padding = '12px 18px';
+        toast.style.boxShadow = '0 8px 32px rgba(0,0,0,0.45)';
+        toast.style.border = '1px solid rgba(59, 130, 246, 0.4)';
+        toast.style.zIndex = '99999';
+
+        toast.innerHTML = `
+            <i class="fas fa-arrows-rotate fa-spin" style="color: #60a5fa; font-size: 1.1rem;"></i>
+            <div style="flex: 1; font-weight: 500; font-size: 0.9rem;">${msg}</div>
+            <button id="pwaUpdateBtn" style="background: #2563eb; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: background 0.2s;">
+                ${btnText}
+            </button>
+        `;
+        toastContainer.appendChild(toast);
+
+        toast.querySelector('#pwaUpdateBtn')?.addEventListener('click', () => {
+            if (registration && registration.waiting) {
+                registration.waiting.postMessage({ action: 'skipWaiting' });
+            }
+        });
+    }
+
     // Register Service Worker for 100% Offline PWA functionality
     if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                refreshing = true;
+                window.location.reload();
+            }
+        });
+
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js').catch(() => {});
+            navigator.serviceWorker.register('./sw.js').then((reg) => {
+                if (reg.waiting) {
+                    showPwaUpdateToast(reg);
+                    return;
+                }
+
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    if (!newWorker) return;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            showPwaUpdateToast(reg);
+                        }
+                    });
+                });
+            }).catch(() => {});
         });
     }
 }

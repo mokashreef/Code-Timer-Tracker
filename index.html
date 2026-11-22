@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=2.4.3">
+    <link rel="stylesheet" href="style.css?v=2.5.0">
     <script src="vendor/fontawesome/js/all.min.js"></script>
     <script src="vendor/chart.umd.min.js"></script>
 </head>
@@ -458,6 +458,9 @@
                         <button id="exportJsonBtn" class="btn-secondary">
                             <i class="fas fa-file-code"></i> <span data-i18n="export_json">Export JSON</span>
                         </button>
+                        <button id="exportPdfBtn" class="btn-secondary">
+                            <i class="fas fa-file-pdf"></i> <span data-i18n="export_pdf">Export PDF Timesheet</span>
+                        </button>
                     </div>
                 </div>
 
@@ -679,6 +682,31 @@
                                     <span class="checkmark"></span>
                                     <span class="checkbox-label" data-i18n="settings_sound">Enable procedural synthesizer audio cues (Web Audio API)</span>
                                 </label>
+                                <div class="audio-settings-group" id="audioSettingsGroup" style="margin-left: 28px; margin-top: 12px; padding: 14px; background: rgba(255,255,255,0.04); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                                    <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+                                        <div style="flex: 1; min-width: 160px;">
+                                            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 5px;" data-i18n="settings_sound_preset">Sound Preset</label>
+                                            <select id="settingSoundPreset" class="form-control" style="font-size: 0.85rem; padding: 7px 10px;">
+                                                <option value="chime" data-i18n="opt_preset_chime">Bell / Chime (Harmonic Sine)</option>
+                                                <option value="digital" data-i18n="opt_preset_digital">Digital Pulse (Classic Beep)</option>
+                                                <option value="marimba" data-i18n="opt_preset_marimba">Marimba / Wooden Tap</option>
+                                            </select>
+                                        </div>
+                                        <div style="flex: 1; min-width: 150px;">
+                                            <label style="font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                                <span data-i18n="settings_sound_volume">Volume</span>
+                                                <span id="soundVolumeLabel" style="font-weight: 600; color: var(--primary);">80%</span>
+                                            </label>
+                                            <input type="range" id="settingSoundVolume" min="0" max="100" value="80" class="volume-slider" style="width: 100%; accent-color: var(--primary); cursor: pointer;">
+                                        </div>
+                                        <div>
+                                            <button type="button" id="btnPreviewSound" class="btn btn-secondary" style="padding: 7px 14px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                                                <i class="fas fa-volume-high"></i>
+                                                <span data-i18n="settings_sound_preview">Test Chime</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -780,7 +808,7 @@
                                 <h2 class="card-title"><i class="fab fa-android text-emerald"></i> <span data-i18n="about_apk_title">Android Offline Application</span></h2>
                                 <p class="card-hint" data-i18n="about_apk_sub">Standalone native APK with zero internet requirement.</p>
                             </div>
-                            <span class="badge-emerald" data-i18n="about_apk_badge">v2.4.3 • 100% Offline</span>
+                            <span class="badge-emerald" data-i18n="about_apk_badge">v2.5.0 • 100% Offline</span>
                         </div>
                         <div class="apk-download-box">
                             <p class="apk-desc" data-i18n="about_apk_desc">
@@ -1328,7 +1356,7 @@
     <!-- Notification Toast Container -->
     <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
-    <script src="script.js?v=2.4.3"></script>
+    <script src="script.js?v=2.5.0"></script>
 </body>
 
 </html>
